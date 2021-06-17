@@ -36,3 +36,70 @@
     transform: rotate(360deg);
   }
 }
+
+.d-flex {
+  display: flex !important;
+}
+
+.d-flex.flex-column{
+  flex-direction: column !important;
+}
+
+.d-flex.justify-content-center{
+  justify-content: center !important;
+}
+
+.d-flex.d-flex.justify-content-start{
+  justify-content: flex-start !important;
+}
+
+.d-flex.d-flex.justify-content-end{
+  justify-content: flex-end !important;
+}
+
+.d-flex.d-flex.justify-content-sp-between{
+  justify-content: space-between !important;
+}
+
+.d-flex.align-items-center{
+  align-items: center !important;
+}
+
+.d-flex.align-items-start{
+  align-items: flex-start !important;
+}
+
+.d-flex.align-items-end{
+  align-items: flex-end !important;
+}
+
+.d-none{
+  display: none !important;
+}
+
+.font-125{
+  font-size: 1.25rem;
+}
+
+.m-in-r-10 > *{
+  margin-right: 10px;
+}
+
+.m-in-l-10 > *{
+  margin-left: 10px;
+}
+
+.m-in-x-10 > *{
+  margin-right: 10px;
+  margin-left: 10px;
+}
+
+.m-in-y-10 > *{
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+.m-y-20{
+  margin-top: 20px !important;
+  margin-bottom: 20px !important;
+}
