@@ -17,13 +17,14 @@ const AccordionContainer = styled.div `
             padding-right: 10px;
         }
     }
-    & p{
+    & div.hidden{
         height: 0;
         transform: scaleY(0);
         transform-origin: top;
         transition: all ease .3s;
     }
-    & p.visible{
+    & div.visible{
+        transform-origin: top;
         height: 100%;
         transform: scaleY(1);
         transition: all ease .3s;
@@ -53,7 +54,9 @@ export default function Accordion(props){
                 <h3>{props.title}</h3>
                 <PlusButton onClick={toggleAccordion}>+</PlusButton>
             </div>
-            <p className={visible ? "visible" : ""}>{props.description}</p>
+            <div className={visible ? "visible" : "hidden"}>
+                {props.description.map(p => {return (<p>{p}</p>)})}
+            </div>
             <hr/>
         </AccordionContainer>
     )

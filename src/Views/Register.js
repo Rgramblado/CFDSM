@@ -7,12 +7,12 @@ import { RegisterService } from '../Services/AuthServices';
 import { UserContext } from '../Contexts/UserContext';
 
 export default function Login() {
-    const [email, setEmail] = useState('rgramblado3@gmail.com')
-    const [password, setPassword] = useState('Pass123.,')
-    const [passwordConfirmation, setPasswordConfirmation] = useState('Pass123.,')
-    const [username, setUsername] = useState('rgramblado3')
-    const [name, setName] = useState('Rafael')
-    const [surname, setSurname] = useState('Gonzalez')
+    const [email, setEmail] = useState('')
+    const [password, setPassword] = useState('')
+    const [passwordConfirmation, setPasswordConfirmation] = useState('')
+    const [username, setUsername] = useState('')
+    const [name, setName] = useState('')
+    const [surname, setSurname] = useState('')
 
     const [emailError, setEmailError] = useState('')
     const [passwordError, setPasswordError] = useState('')
@@ -145,7 +145,7 @@ export default function Login() {
     return (
         <div className={classes.loginFormContainer}>
         <form noValidate onSubmit={handleSubmit} className={classes.loginForm}>
-            <Typography component="h1" variant="h5">Iniciar sesión</Typography>
+            <Typography component="h1" variant="h5">Registrarme</Typography>
             <MuiThemeProvider theme={theme}>
           <img src={Logo} className="logo" alt="Logo"/>
           <FormControl className={classes.formControl} margin="dense" variant="filled" error={emailError !== ""}>

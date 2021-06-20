@@ -5,8 +5,8 @@ const useStyles = makeStyles((theme) => ({
     coinCard: {
         padding: "5px 10px",
         boxShadow: "3px 3px 10px 4px rgba(0,0,0,0.4)",
-        width: "230px",
-        height: "150px",
+        width: "300px",
+        height: "170px",
         display: "flex",
         justifyContent: "space-between"
     },

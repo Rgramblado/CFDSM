@@ -1,8 +1,9 @@
-import {useState, useEffect} from 'react'
+import {useState, useEffect, useContext} from 'react'
 import { useParams } from "react-router"
-import { GetCandlesticks, GetMarket, GetTicker } from "../Services/MarketsServices"
-import { GetUserOperations, AddOperation, DeleteOperation } from "../Services/OperationsServices"
+import { GetCandlesticks, GetMarket, GetTicker, } from "../Services/MarketsServices"
+import { GetUserOperations, GetUserPendingOperations, AddOperation, DeleteOperation } from "../Services/OperationsServices"
 import { GetUserData } from "../Services/AuthServices"
+import { UserContext } from '../Contexts/UserContext'
 
 import Highcharts from 'highcharts/highstock';
 import HighchartsReact from 'highcharts-react-official'
@@ -12,6 +13,7 @@ import useInterval from '../useInterval'
 
 import USDT from '../Assets/Img/usdt.png'
 import { AccountBalanceWallet, Info } from '@material-ui/icons';
+import { Link } from 'react-router-dom'
 
 const TradingSection = styled.section`
     display: grid;
@@ -156,7 +158,7 @@ const OpTypeButtons = styled.div `
     flex-direction: row;
     align-items: flex-start;
     width: 100%;
-    > button {
+    & button {
         flex: 1;
         padding: 10px;
         background-color: #1E1F25;
@@ -305,6 +307,29 @@ const LeverageButtons = styled.div `
 
 `
 
+const LoginContainer = styled.div `
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    color: whitesmoke;
+    padding: 10px;
+    font-size: 1.1rem;
+    & button {
+        margin-top: 20px;
+        outline: none;
+        border: 1px solid #FAA980;
+        background-color: rgba(0,0,0,0);
+        color: #FAA980;
+        padding: 10px 20px;
+        font-size: 1.25rem;
+        transition: all ease .2s;
+        &:hover{
+            background-color: #FAA980;
+            color: whitesmoke;
+        }
+    }
+`
+
 const UserOperations = styled.div`
     color: whitesmoke;
     display: flex;
@@ -330,6 +355,13 @@ const UserOperations = styled.div`
     }
     & img {
         width: 50px;
+    }
+    & a {
+        color: white;
+        text-decoration: none;
+        &:hover{
+            color: #FAA980;
+        }
     }
     & > div {
         margin-top: 10px;
@@ -428,10 +460,9 @@ const UserOperations = styled.div`
         & .winner, .looser{
             min-width: 0
         }
-    }
-    
+    }  
 `
-
+ 
 
 export default function Trading(){
     const { market } = useParams();
@@ -446,6 +477,7 @@ export default function Trading(){
     const [makeOpsActive, setMakeOpsActive] = useState(false);
     const [leverage, setLeverage] = useState(10)
     const [opType, setOpType] = useState("Limit")
+    const [activeOps, setActiveOps] = useState(true)
     const [useUSDT, setUseUSDT] = useState(true)
 
     const [limitPrice, setLimitPrice] = useState("")
@@ -454,7 +486,10 @@ export default function Trading(){
     
     const [ticker, setTicker] = useState({})
     const [userOperationsResume, setUserOperationsResume] = useState([])
+    const [userOperationsPending, setUserOperationsPending] = useState([])
     const [wallet, setWallet] = useState(0)
+
+    const userContext = useContext(UserContext)
 
     const intervals = { //ms for every step in klines
         "15m": 900000,
@@ -658,24 +693,44 @@ export default function Trading(){
     }
 
     function getUserData(){
-        GetUserOperations().then(resGet => {
-            var data = []
-            resGet.data.map(dat => {
-                data.push([
-                    dat.market.icon,
-                    dat.market.name, 
-                    dat.is_long, 
-                    dat.leverage, 
-                    dat.margin, 
-                    dat.weight, 
-                    dat.entry_price, 
-                    dat.liquidation_price,
-                    dat.id
-                ]);
+        
+        if(userContext.token){
+            GetUserOperations().then(resGet => {
+                var data = []
+                resGet.data.map(dat => {
+                    data.push([
+                        dat.market.icon,
+                        dat.market.name, 
+                        dat.is_long, 
+                        dat.leverage, 
+                        dat.margin, 
+                        dat.weight, 
+                        dat.entry_price, 
+                        dat.liquidation_price,
+                        dat.id
+                    ]);
+                })
+                setUserOperationsResume(data);
             })
-            setUserOperationsResume(data);
-        })
-        GetUserData().then((res) => setWallet(parseFloat(res.data.wallet)))
+            GetUserPendingOperations().then(resGet => {
+                var data = []
+                resGet.data.map(dat => {
+                    data.push([
+                        dat.market.icon,
+                        dat.market.name, 
+                        dat.is_long, 
+                        dat.leverage, 
+                        dat.margin, 
+                        dat.weight, 
+                        dat.limit_price, 
+                        dat.liquidation_price,
+                        dat.id
+                    ]);
+                })
+                setUserOperationsPending(data);
+            })
+            GetUserData().then((res) => setWallet(parseFloat(res.data.wallet)))
+        }
     }
 
     return(
@@ -729,7 +784,16 @@ export default function Trading(){
             <MakeOpsButton>
                 <button onClick={() => setMakeOpsActive(!makeOpsActive)}>Realizar operaciones</button>
             </MakeOpsButton>
-            <MarketOps className={makeOpsActive ? "active" : ""}>              
+            <UserContext.Consumer>{(user) => 
+            {
+            if(!user.token){
+                return(<LoginContainer>
+                    Para poder hacer operaciones, tienes que iniciar sesión:
+                    <Link to="/login"><button>Iniciar sesión</button></Link>
+                    </LoginContainer>
+                )
+            }
+            return(<><MarketOps className={makeOpsActive ? "active" : ""}>              
                 <OpTypeButtons>
                     <button 
                         className={opType === "Limit" ? "active" : ""}
@@ -820,9 +884,22 @@ export default function Trading(){
                     <button onClick={executeOperation} className="sell-button">Vender</button>
                 </BuySellButtons>
             </MarketOps>
+            
             <UserOperations>
+                <OpTypeButtons>
+                    <button 
+                        className={activeOps ? "active" : ""}
+                        onClick={() => setActiveOps(true)}>
+                            Activas
+                    </button>
+                    <button 
+                        className={!activeOps ? "active" : ""}
+                        onClick={() => setActiveOps(false)}>
+                            Pendientes
+                    </button>
+                </OpTypeButtons>
                 {userOperationsResume.length === 0 ? "No hay operaciones que mostrar" : ""}
-                {userOperationsResume.map(op => {
+                {activeOps ? userOperationsResume.map(op => {
                     var profit = op[5]*
                     (op[2] === 1 ? 1 : -1)*
                     ((ticker.hasOwnProperty(op[1]) ? ticker[op[1]].last_price : 0) - op[6])
@@ -831,7 +908,7 @@ export default function Trading(){
                         <div>
                             {op[2] === 1 ? <span className="long">L</span> : <span className="short">S</span>}
                             <img src={op[0]}/>
-                            <span>{op[1].split("USDT")}/USDT</span>
+                            <Link to={`/trading/` + op[1]}>{op[1].split("USDT")}/USDT</Link>
                             <div className="leverage d-sm-none">x{op[3]}</div>
                             <span className = {profit > 0 ? "winner" : 
                             profit < 0 ? "looser" : "equals"}>{profit.toLocaleString(undefined, {
@@ -870,9 +947,54 @@ export default function Trading(){
                             </li>
                         </ul>
                     </div>)
-                })}
+                }) : 
+
+                userOperationsPending.map (op => {
+                    return (
+                        <div className="details">
+                            <div>
+                                {op[2] === 1 ? <span className="long">L</span> : <span className="short">S</span>}
+                                <img src={op[0]}/>
+                                <Link to={`/trading/` + op[1]}>{op[1].split("USDT")}/USDT</Link>
+                                <div className="leverage d-sm-none">x{op[3]}</div>
+                                <span >Limit: {parseFloat(op[6]).toLocaleString(undefined, {
+                                    maximumFractionDigits: 4,
+                                    minimumFractionDigits: 4
+                                })}</span>
+                                <div className="align-right">
+                                    <button className="op-button d-sm-none" onClick={ () => closeOperation(op[8])}>Cerrar</button>
+                                    <button className="op-button open-data-button" onClick={openOperation} >+</button>
+                                </div>
+                            </div>
+                            <ul className="op-data">
+                                <li>Tipo de operación: {op[2] === 1 ? "Long" : "Short"}</li>
+                                <li>Apalancamiento: x{op[3]}</li>
+                                <li>Tamaño: {parseFloat(op[5]).toLocaleString(undefined, {
+                                    maximumFractionDigits: 4,
+                                    minimumFractionDigits: 2
+                                })} {op[1].split("USDT")[0]}</li>
+                                <li>Margin: {parseFloat(op[4]).toLocaleString(undefined, {
+                                    maximumFractionDigits: 4,
+                                    minimumFractionDigits: 2
+                                })} USDT</li>
+                                <li>Precio de entrada: {parseFloat(op[6]).toLocaleString(undefined, {
+                                    maximumFractionDigits: 4,
+                                    minimumFractionDigits: 2
+                                })} USDT</li>
+                                <li>Precio de liquidación: {parseFloat(op[7]).toLocaleString(undefined, {
+                                    maximumFractionDigits: 4,
+                                    minimumFractionDigits: 2
+                                })} USDT</li>
+                                <li>
+                                    <button className="op-button" onClick={ () => closeOperation(op[8])}>Cerrar</button>
+                                </li>
+                            </ul>
+                        </div>
+                )})
+                }
                 
-            </UserOperations>
+            </UserOperations></>
+            )}}</UserContext.Consumer>
         </TradingSection>
     )
 }

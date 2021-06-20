@@ -23,6 +23,16 @@ export async function GetUserHistoricalOperations(){
     return await axiosInstance.get();
 }
 
+export async function GetUserPendingOperations(){
+    const axiosInstance = axios.create({
+        headers: {
+            Authorization: localStorage.token
+        },
+        baseURL: BASE_URL + "/api/user/operations/pending"
+    })
+    return await axiosInstance.get();
+}
+
 export async function AddOperation(symbol, is_long, leverage, margin, limit_price = null){
     axios.get(BASE_URL + '/sanctum/csrf-cookie')
     const axiosInstance = axios.create({

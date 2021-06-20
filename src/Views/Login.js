@@ -113,9 +113,6 @@ export default function Login() {
           <Link href="/register">
             Registrarme
           </Link>
-          <Link href="/register">
-            He olvidado mi contraseña
-          </Link>
         </div>
         <MuiThemeProvider theme={theme}>
           <Button
